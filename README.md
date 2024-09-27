@@ -1,1 +1,1 @@
-# aws-parallelcluster-scripts
+# AWS Parallelcluster Scripts
