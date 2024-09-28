@@ -8,8 +8,8 @@ chmod +x ${CODER_DIR}/init_script.sh
 
 CODER_AGENT_USER="${2:-ubuntu}"
 CODER_AGENT_CMD="nohup ${CODER_DIR}/init_script.sh >/dev/null 2>&1 &"
-sudo -u ${CODER_AGENT_USER} bash -c "${CODER_AGENT_CMD}"
+sudo -u ${CODER_AGENT_USER} bash "${CODER_AGENT_CMD}"
 
-echo "@reboot ${CODER_AGENT_CMD}" | sudo -u ${CODER_AGENT_USER} crontab -
+echo "@reboot bash -c \"${CODER_AGENT_CMD}\"" | sudo -u ${CODER_AGENT_USER} crontab -
 
 exit 0
