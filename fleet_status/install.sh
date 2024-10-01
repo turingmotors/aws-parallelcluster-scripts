@@ -9,35 +9,23 @@ curl -o ${SCRIPT_PATH} ${SCRIPT_URL}
 # 実行権限を付与
 chmod +x ${SCRIPT_PATH}
 
-tee /etc/systemd/system/update_fleet_status_start.service > /dev/null << EOT
+tee /etc/systemd/system/parallelcluster-compute-fleet-status.service > /dev/null << EOT
 [Unit]
-Description=Update Fleet Status on startup
+Description=Update Fleet Status on startup and shutdown
+DefaultDependencies=no
 After=network.target
+Before=slurmctld.service shutdown.target
 
 [Service]
-Type=oneshot
+RemainAfterExit=yes
 ExecStart=${SCRIPT_PATH} start
+ExecStop=${SCRIPT_PATH} stop
 
 [Install]
 WantedBy=multi-user.target
 EOT
 
-tee /etc/systemd/system/update_fleet_status_stop.service > /dev/null << EOT
-[Unit]
-Description=Update Fleet Status on shutdown
-DefaultDependencies=no
-Before=shutdown.target
-
-[Service]
-Type=oneshot
-ExecStart=${SCRIPT_PATH} stop
-
-[Install]
-WantedBy=shutdown.target
-EOT
-
 systemctl daemon-reload
-systemctl enable update_fleet_status_start.service
-systemctl enable update_fleet_status_stop.service
+systemctl enable parallelcluster-compute-fleet-status.service
 
 exit 0
