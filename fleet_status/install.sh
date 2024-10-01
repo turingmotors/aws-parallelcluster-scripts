@@ -12,8 +12,8 @@ chmod +x ${SCRIPT_PATH}
 tee /etc/systemd/system/parallelcluster-compute-fleet-status.service > /dev/null << EOT
 [Unit]
 Description=Update Fleet Status on startup and shutdown
-After=network.target
-Before=supervisord.service
+After=network-online.target
+Before=network.target supervisord.service
 
 [Service]
 Type=oneshot
