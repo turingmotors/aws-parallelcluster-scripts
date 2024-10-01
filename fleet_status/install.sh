@@ -1,14 +1,9 @@
 #!/bin/bash
 
 SCRIPT_URL="https://raw.githubusercontent.com/turingmotors/aws-parallelcluster-scripts/main/fleet_status/update_compute_fleet_status.sh"
+SCRIPT_PATH="/opt/parallelcluster/update_fleet_status.sh"
 
-curl -o /opt/parallelcluster/update_fleet_status.sh ${SCRIPT_URL}
-
-CODER_DIR="/opt/coder_agent"
-mkdir -p ${CODER_DIR}
-
-echo "$1" > ${CODER_DIR}/init.sh
-chmod 755 ${CODER_DIR}/init.sh
+curl -o ${SCRIPT_PATH} ${SCRIPT_URL}
 
 tee /etc/systemd/system/update_fleet_status_start.service > /dev/null << EOT
 [Unit]
@@ -17,7 +12,7 @@ After=network.target
 
 [Service]
 Type=oneshot
-ExecStart=/opt/parallelcluster/update_compute_fleet_status.sh start
+ExecStart=${SCRIPT_PATH} start
 
 [Install]
 WantedBy=multi-user.target
@@ -31,7 +26,7 @@ Before=shutdown.target
 
 [Service]
 Type=oneshot
-ExecStart=/opt/parallelcluster/update_compute_fleet_status.sh stop
+ExecStart=${SCRIPT_PATH} stop
 
 [Install]
 WantedBy=shutdown.target
