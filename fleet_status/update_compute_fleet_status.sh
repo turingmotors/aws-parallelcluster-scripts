@@ -46,17 +46,19 @@ MAX_WAIT_TIME=120  # 最大待機時間（秒）
 INTERVAL=10        # チェック間隔（秒）
 elapsed_time=0
 
-# ステータスが STOPPED か RUNNING になるまで待機
-while [ $elapsed_time -lt $MAX_WAIT_TIME ]; do
-    STATUS=$(get_fleet_status)
-    if [ "$STATUS" == "STOPPED" ] || [ "$STATUS" == "RUNNING" ]; then
-        echo "Fleet status is now $STATUS"
-        break
-    else
-        echo "Current fleet status is $STATUS. Waiting..."
-        sleep $INTERVAL  # チェック間隔待機
-        elapsed_time=$((elapsed_time + INTERVAL))
-    fi
-done
+# ステータスが STOPPED になるまで待機
+if [ "$ACTION" == "stop" ]; then
+    while [ $elapsed_time -lt $MAX_WAIT_TIME ]; do
+        STATUS=$(get_fleet_status)
+        if [ "$STATUS" == "STOPPED" ]; then
+            echo "Fleet status is now $STATUS"
+            break
+        else
+            echo "Current fleet status is $STATUS. Waiting..."
+            sleep $INTERVAL  # チェック間隔待機
+            elapsed_time=$((elapsed_time + INTERVAL))
+        fi
+    done
+fi
 
 exit 0
