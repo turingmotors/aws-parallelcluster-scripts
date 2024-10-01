@@ -35,6 +35,7 @@ update_fleet_status () {
             ":s": {"S": "'"${FLEET_STATUS}"'"}
         }' \
         --return-values ALL_NEW
+        --region ${REGION}
 }
 
 # DynamoDB Table 上のステータスを更新
