@@ -20,6 +20,7 @@ Type=oneshot
 RemainAfterExit=yes
 ExecStart=${SCRIPT_PATH} start
 ExecStop=${SCRIPT_PATH} stop
+TimeoutStopSec=90s
 
 [Install]
 WantedBy=multi-user.target
