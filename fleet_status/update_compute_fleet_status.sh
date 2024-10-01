@@ -31,7 +31,7 @@ update_fleet_status () {
         --update-expression "SET #d.#updated_time = :t, #d.#status = :s" \
         --expression-attribute-names '{"#d": "Data", "#updated_time": "lastStatusUpdatedTime", "#status": "status"}' \
         --expression-attribute-values '{
-            ":t": {"S": "'"$(date --utc +"%Y-%m-%d %H:%M:%S UTC")"'"},
+            ":t": {"S": "'"$(date --utc "+%Y-%m-%d %H:%M:%S.%6N%:z")"'"},
             ":s": {"S": "'"${FLEET_STATUS}"'"}
         }' \
         --return-values ALL_NEW \
