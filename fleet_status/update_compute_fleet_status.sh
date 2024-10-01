@@ -6,7 +6,7 @@ CONFIG_FILE="/etc/parallelcluster/clusterstatusmgtd.conf"
 CLUSTER_NAME=$(grep "^cluster_name" "$CONFIG_FILE" | awk -F'=' '{print $2}' | tr -d ' ')
 REGION=$(grep "^region" "$CONFIG_FILE" | awk -F'=' '{print $2}' | tr -d ' ')
 
-source /opt/parallelcluster-cli/bin/activate
+source /opt/pcluster/bin/activate
 
 get_fleet_status () {
     pcluster describe-compute-fleet \
