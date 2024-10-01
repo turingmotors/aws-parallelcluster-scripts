@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Install ParallelCluster CLI
+python3 -m pip install --user --upgrade virtualenv
+python3 -m virtualenv /opt/pcluster
+/opt/pcluster/bin/pip3 install aws-parallelcluster
+
 SCRIPT_URL="https://raw.githubusercontent.com/turingmotors/aws-parallelcluster-scripts/main/fleet_status/update_compute_fleet_status.sh"
 SCRIPT_PATH="/opt/parallelcluster/update_fleet_status.sh"
 
