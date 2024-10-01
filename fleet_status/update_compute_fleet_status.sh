@@ -21,7 +21,7 @@ fi
 get_fleet_status () {
     PYTHON_BIN="/opt/parallelcluster/pyenv/versions/3.9.20/envs/node_virtualenv/bin/python"
     SCRIPT="/opt/parallelcluster/scripts/compute_fleet_status.py"
-    $PYTHON_BIN $SCRIPT --table-name ${TABLE_NAME} --region ${REGION} --action get | jq .status
+    $PYTHON_BIN $SCRIPT --table-name ${TABLE_NAME} --region ${REGION} --action get | jq -r .status
 }
 
 update_fleet_status () {
@@ -37,6 +37,7 @@ update_fleet_status () {
         --return-values ALL_NEW
 }
 
+# DynamoDB Table 上のステータスを更新
 update_fleet_status
 
 # タイムアウトとチェック間隔の設定
@@ -56,3 +57,5 @@ while [ $elapsed_time -lt $MAX_WAIT_TIME ]; do
         elapsed_time=$((elapsed_time + INTERVAL))
     fi
 done
+
+exit 0
