@@ -1,12 +1,14 @@
 #!/bin/bash
 
+BASE_DIR="/opt/pcluster"
+
 # Install ParallelCluster CLI
 python3 -m pip install --user --upgrade virtualenv
-python3 -m virtualenv /opt/pcluster
-/opt/pcluster/bin/pip3 install aws-parallelcluster
+python3 -m virtualenv ${BASE_DIR}/venv
+${BASE_DIR}/venv/bin/pip3 install aws-parallelcluster
 
 SCRIPT_URL="https://raw.githubusercontent.com/turingmotors/aws-parallelcluster-scripts/main/fleet_status/update_compute_fleet_status.sh"
-SCRIPT_PATH="/opt/parallelcluster/update_fleet_status.sh"
+SCRIPT_PATH="${BASE_DIR}/update_compute_fleet.sh"
 
 # スクリプトを取得
 curl -o ${SCRIPT_PATH} ${SCRIPT_URL}
