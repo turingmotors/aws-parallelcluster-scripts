@@ -13,14 +13,14 @@ tee /etc/systemd/system/parallelcluster-compute-fleet-status.service > /dev/null
 [Unit]
 Description=Update Fleet Status on startup and shutdown
 After=network-online.target
-Before=network-online.target supervisord.service
+Before=supervisord.service
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=${SCRIPT_PATH} start
 ExecStop=${SCRIPT_PATH} stop
-TimeoutStopSec=90s
+TimeoutStopSec=120s
 
 [Install]
 WantedBy=multi-user.target
