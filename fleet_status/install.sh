@@ -13,8 +13,8 @@ tee /etc/systemd/system/parallelcluster-compute-fleet-status.service > /dev/null
 [Unit]
 Description=Update Fleet Status on startup and shutdown
 DefaultDependencies=no
-After=network.target
-Before=slurmctld.service shutdown.target
+After=network.target slurmctld.service
+Before=shutdown.target
 
 [Service]
 Type=oneshot
