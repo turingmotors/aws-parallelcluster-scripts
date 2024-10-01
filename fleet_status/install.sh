@@ -17,6 +17,7 @@ After=network.target
 Before=slurmctld.service shutdown.target
 
 [Service]
+Type=oneshot
 RemainAfterExit=yes
 ExecStart=${SCRIPT_PATH} start
 ExecStop=${SCRIPT_PATH} stop
