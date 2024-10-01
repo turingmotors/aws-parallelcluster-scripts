@@ -28,5 +28,6 @@ EOT
 
 systemctl daemon-reload
 systemctl enable parallelcluster-compute-fleet-status.service
+systemctl start parallelcluster-compute-fleet-status.service
 
 exit 0
