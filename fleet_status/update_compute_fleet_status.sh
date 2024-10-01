@@ -29,22 +29,15 @@ if [ "$ACTION" = "start" ]; then
     update_compute_fleet "START_REQUESTED"
 elif [ "$ACTION" = "stop" ]; then
     update_compute_fleet "STOP_REQUESTED"
-    # タイムアウトとチェック間隔の設定
-    MAX_WAIT_TIME=120  # 最大待機時間（秒）
-    INTERVAL=10        # チェック間隔（秒）
-    elapsed_time=0
-    # 待機
-    while [ $elapsed_time -lt $MAX_WAIT_TIME ]; do
-        STATUS=$(get_fleet_status)
-        if [ "$STATUS" == "STOPPED" ]; then
-            echo "Fleet status is now $STATUS"
-            break
-        else
-            echo "Current fleet status is $STATUS. Waiting..."
-            sleep $INTERVAL  # チェック間隔待機
-            elapsed_time=$((elapsed_time + INTERVAL))
-        fi
-    done
+    # 強制停止
+    compute_node_ids=$(aws ec2 describe-instances \
+        --filters \
+            "Name=tag:parallelcluster:cluster-name,Values=${CLUSTER_NAME}" \
+            "Name=tag:parallelcluster:node-type,Values=Compute" \
+            "Name=instance-state-name,Values=running" \
+        --query "Reservations[].Instances[].InstanceId" \
+        --output text)
+    aws ec2 terminate-instances --instance-ids ${compute_node_ids}
 else
     echo "Usage: $0 start|stop"
     exit 1
