@@ -34,7 +34,7 @@ update_fleet_status () {
             ":t": {"S": "'"$(date --utc +"%Y-%m-%d %H:%M:%S UTC")"'"},
             ":s": {"S": "'"${FLEET_STATUS}"'"}
         }' \
-        --return-values ALL_NEW
+        --return-values ALL_NEW \
         --region ${REGION}
 }
 
