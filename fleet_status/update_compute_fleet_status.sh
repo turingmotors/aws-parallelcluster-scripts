@@ -3,46 +3,30 @@
 # 設定ファイルから TABLE_NAME と REGION を取得
 CONFIG_FILE="/etc/parallelcluster/clusterstatusmgtd.conf"
 
-TABLE_NAME=$(grep "dynamodb_table" "$CONFIG_FILE" | awk -F'=' '{print $2}' | tr -d ' ')
+CLUSTER_NAME=$(grep "^cluster_name" "$CONFIG_FILE" | awk -F'=' '{print $2}' | tr -d ' ')
 REGION=$(grep "^region" "$CONFIG_FILE" | awk -F'=' '{print $2}' | tr -d ' ')
 
 get_fleet_status () {
-    local python="/opt/parallelcluster/pyenv/versions/3.9.20/envs/node_virtualenv/bin/python"
-    local script="/opt/parallelcluster/scripts/compute_fleet_status.py"
-    $python $script --table-name ${TABLE_NAME} --region ${REGION} --action get | jq -r .status
+    /opt/parallelcluster-cli/bin/pcluster describe-compute-fleet \
+        --cluster-name ${CLUSTER_NAME} \
+        --region ${REGION} | jq -r .status
 }
 
-update_fleet_status () {
+update_compute_fleet () {
     local fleet_status=$1
-    aws dynamodb update-item \
-        --table-name ${TABLE_NAME} \
-        --key '{"Id": {"S": "COMPUTE_FLEET"}}' \
-        --update-expression "SET #d.#updated_time = :t, #d.#status = :s" \
-        --expression-attribute-names '{"#d": "Data", "#updated_time": "lastStatusUpdatedTime", "#status": "status"}' \
-        --expression-attribute-values '{
-            ":t": {"S": "'"$(date --utc "+%Y-%m-%d %H:%M:%S.%6N%:z")"'"},
-            ":s": {"S": "'"${fleet_status}"'"}
-        }' \
-        --return-values ALL_NEW \
-        --region ${REGION}
-
-    # エラーハンドリング
-    if [ $? -ne 0 ]; then
-        echo "Failed to update fleet status to ${fleet_status}"
-        exit 1
-    fi
+    /opt/pcluster/bin/pcluster update-compute-fleet \
+        --cluster-name ${CLUSTER_NAME} \
+        --region ${REGION}  \
+        --status ${fleet_status}
 }
 
 # アクションの指定（start または stop）
 ACTION=$1
 
 if [ "$ACTION" = "start" ]; then
-    current_status=$(get_fleet_status)
-    if [ "$current_status" != "RUNNING" ]; then
-        update_fleet_status "START_REQUESTED"
-    fi
+    update_compute_fleet "START_REQUESTED"
 elif [ "$ACTION" = "stop" ]; then
-    update_fleet_status "STOP_REQUESTED"
+    update_compute_fleet "STOP_REQUESTED"
     # タイムアウトとチェック間隔の設定
     MAX_WAIT_TIME=120  # 最大待機時間（秒）
     INTERVAL=10        # チェック間隔（秒）
