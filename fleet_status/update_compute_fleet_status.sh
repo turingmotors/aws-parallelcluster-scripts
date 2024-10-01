@@ -6,25 +6,14 @@ CONFIG_FILE="/etc/parallelcluster/clusterstatusmgtd.conf"
 TABLE_NAME=$(grep "dynamodb_table" "$CONFIG_FILE" | awk -F'=' '{print $2}' | tr -d ' ')
 REGION=$(grep "^region" "$CONFIG_FILE" | awk -F'=' '{print $2}' | tr -d ' ')
 
-# アクションの指定（start または stop）
-ACTION=$1
-
-if [ "$ACTION" == "start" ]; then
-    FLEET_STATUS="START_REQUESTED"
-elif [ "$ACTION" == "stop" ]; then
-    FLEET_STATUS="STOP_REQUESTED"
-else
-    echo "Usage: $0 start|stop"
-    exit 1
-fi
-
 get_fleet_status () {
-    PYTHON_BIN="/opt/parallelcluster/pyenv/versions/3.9.20/envs/node_virtualenv/bin/python"
-    SCRIPT="/opt/parallelcluster/scripts/compute_fleet_status.py"
-    $PYTHON_BIN $SCRIPT --table-name ${TABLE_NAME} --region ${REGION} --action get | jq -r .status
+    local python="/opt/parallelcluster/pyenv/versions/3.9.20/envs/node_virtualenv/bin/python"
+    local script="/opt/parallelcluster/scripts/compute_fleet_status.py"
+    $python $script --table-name ${TABLE_NAME} --region ${REGION} --action get | jq -r .status
 }
 
 update_fleet_status () {
+    local fleet_status=$1
     aws dynamodb update-item \
         --table-name ${TABLE_NAME} \
         --key '{"Id": {"S": "COMPUTE_FLEET"}}' \
@@ -32,22 +21,33 @@ update_fleet_status () {
         --expression-attribute-names '{"#d": "Data", "#updated_time": "lastStatusUpdatedTime", "#status": "status"}' \
         --expression-attribute-values '{
             ":t": {"S": "'"$(date --utc "+%Y-%m-%d %H:%M:%S.%6N%:z")"'"},
-            ":s": {"S": "'"${FLEET_STATUS}"'"}
+            ":s": {"S": "'"${fleet_status}"'"}
         }' \
         --return-values ALL_NEW \
         --region ${REGION}
+
+    # エラーハンドリング
+    if [ $? -ne 0 ]; then
+        echo "Failed to update fleet status to ${fleet_status}"
+        exit 1
+    fi
 }
 
-# DynamoDB Table 上のステータスを更新
-update_fleet_status
+# アクションの指定（start または stop）
+ACTION=$1
 
-# タイムアウトとチェック間隔の設定
-MAX_WAIT_TIME=120  # 最大待機時間（秒）
-INTERVAL=10        # チェック間隔（秒）
-elapsed_time=0
-
-# ステータスが STOPPED になるまで待機
-if [ "$ACTION" == "stop" ]; then
+if [ "$ACTION" = "start" ]; then
+    current_status=$(get_fleet_status)
+    if [ "$current_status" != "RUNNING" ]; then
+        update_fleet_status "START_REQUESTED"
+    fi
+elif [ "$ACTION" = "stop" ]; then
+    update_fleet_status "STOP_REQUESTED"
+    # タイムアウトとチェック間隔の設定
+    MAX_WAIT_TIME=120  # 最大待機時間（秒）
+    INTERVAL=10        # チェック間隔（秒）
+    elapsed_time=0
+    # 待機
     while [ $elapsed_time -lt $MAX_WAIT_TIME ]; do
         STATUS=$(get_fleet_status)
         if [ "$STATUS" == "STOPPED" ]; then
@@ -59,6 +59,9 @@ if [ "$ACTION" == "stop" ]; then
             elapsed_time=$((elapsed_time + INTERVAL))
         fi
     done
+else
+    echo "Usage: $0 start|stop"
+    exit 1
 fi
 
 exit 0
