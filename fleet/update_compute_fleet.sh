@@ -1,14 +1,13 @@
 #!/bin/bash
 
 BASE_DIR=$(dirname "$0")
+source ${BASE_DIR}/venv/bin/activate
 
 # 設定ファイルから TABLE_NAME と REGION を取得
 CONFIG_FILE="/etc/parallelcluster/clusterstatusmgtd.conf"
 
 CLUSTER_NAME=$(grep "^cluster_name" "$CONFIG_FILE" | awk -F'=' '{print $2}' | tr -d ' ')
 REGION=$(grep "^region" "$CONFIG_FILE" | awk -F'=' '{print $2}' | tr -d ' ')
-
-source ${BASE_DIR}/venv/bin/activate
 
 get_fleet_status () {
     pcluster describe-compute-fleet \
