@@ -6,20 +6,20 @@ source ${BASE_DIR}/venv/bin/activate
 # 設定ファイルから TABLE_NAME と REGION を取得
 CONFIG_FILE="/etc/parallelcluster/clusterstatusmgtd.conf"
 
-CLUSTER_NAME=$(grep "^cluster_name" "$CONFIG_FILE" | awk -F'=' '{print $2}' | tr -d ' ')
-REGION=$(grep "^region" "$CONFIG_FILE" | awk -F'=' '{print $2}' | tr -d ' ')
+export CLUSTER_NAME=$(grep "^cluster_name" "$CONFIG_FILE" | awk -F'=' '{print $2}' | tr -d ' ')
+export AWS_REGION=$(grep "^region" "$CONFIG_FILE" | awk -F'=' '{print $2}' | tr -d ' ')
 
 get_fleet_status () {
     pcluster describe-compute-fleet \
         --cluster-name ${CLUSTER_NAME} \
-        --region ${REGION} | jq -r .status
+        --region ${AWS_REGION} | jq -r .status
 }
 
 update_compute_fleet () {
     local fleet_status=$1
     pcluster update-compute-fleet \
         --cluster-name ${CLUSTER_NAME} \
-        --region ${REGION}  \
+        --region ${AWS_REGION}  \
         --status ${fleet_status}
 }
 
