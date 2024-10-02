@@ -7,7 +7,7 @@ python3 -m pip install --user --upgrade virtualenv
 python3 -m virtualenv ${BASE_DIR}/venv
 ${BASE_DIR}/venv/bin/pip3 install aws-parallelcluster
 
-SCRIPT_URL="https://raw.githubusercontent.com/turingmotors/aws-parallelcluster-scripts/main/fleet_status/update_compute_fleet_status.sh"
+SCRIPT_URL="https://raw.githubusercontent.com/turingmotors/aws-parallelcluster-scripts/main/fleet/update_compute_fleet.sh"
 SCRIPT_PATH="${BASE_DIR}/update_compute_fleet.sh"
 
 # スクリプトを取得
