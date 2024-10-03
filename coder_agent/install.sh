@@ -1,10 +1,10 @@
 #!/bin/bash
 
-CODER_DIR="/opt/coder_agent"
+CODER_DIR="/opt/coder"
 mkdir -p ${CODER_DIR}
 
-echo "$1" > ${CODER_DIR}/init.sh
-chmod 755 ${CODER_DIR}/init.sh
+echo "$1" > ${CODER_DIR}/run_agent.sh
+chmod 755 ${CODER_DIR}/run_agent.sh
 
 tee /etc/systemd/system/coder-agent.service > /dev/null << EOT
 [Unit]
@@ -14,7 +14,7 @@ After=network.target
 [Service]
 Type=simple
 User=ubuntu
-ExecStart=/bin/bash /opt/coder_agent/init.sh
+ExecStart=/bin/bash ${CODER_DIR}/run_agent.sh
 Restart=on-failure
 RestartSec=5
 StandardOutput=journal
