@@ -1,8 +1,5 @@
 #!/bin/bash
 
-BUCKET_NAME=$1
-TARGET_DIRECTORY=$2
-
 # Install mount-s3 command for Ubuntu 22.04
 if ! command -v mount-s3 &> /dev/null
 then
@@ -13,7 +10,3 @@ then
 else
   echo "mount-s3 is already installed."
 fi
-
-mkdir -p ${TARGET_DIRECTORY}
-chmod 777 ${TARGET_DIRECTORY}
-sudo -u ubuntu mount-s3 ${BUCKET_NAME} ${TARGET_DIRECTORY}
