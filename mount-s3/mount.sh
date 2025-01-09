@@ -15,6 +15,12 @@ else
   echo "mount-s3 is already installed."
 fi
 
+# Needed if --allow-root or --allow-other option is set
+if ! grep -q "^user_allow_other" /etc/fuse.conf
+then
+    echo "user_allow_other" | sudo tee -a /etc/fuse.conf
+fi
+
 mkdir -p ${TARGET_DIRECTORY}
 chmod 777 ${TARGET_DIRECTORY}
-sudo -u ubuntu mount-s3 ${BUCKET_NAME} ${TARGET_DIRECTORY} ${OPTIONS}
+mount-s3 ${BUCKET_NAME} ${TARGET_DIRECTORY} ${OPTIONS}
