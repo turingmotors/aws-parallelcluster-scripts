@@ -2,7 +2,7 @@
 
 BUCKET_NAME=$1
 TARGET_DIRECTORY=$2
-OPTIONS=${3:-"--incremental-upload"}
+OPTIONS=${3:-"--allow-other"}
 
 # Install mount-s3 command for Ubuntu 22.04
 if ! command -v mount-s3 &> /dev/null
