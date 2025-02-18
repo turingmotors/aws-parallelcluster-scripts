@@ -1,6 +1,8 @@
 #!/bin/bash
 
+set -exo pipefail
+
 PACKAGES=$@
 
-apt-get update
-apt-get install -y ${PACKAGE_NAME}
+apt-get -y update
+apt-get -y install ${PACKAGE_NAME}
