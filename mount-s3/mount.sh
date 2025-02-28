@@ -2,7 +2,7 @@
 
 BUCKET_NAME=$1
 TARGET_DIRECTORY=$2
-OPTIONS=${3:-"--allow-other"}
+OPTIONS="${@:3}"
 
 # Install mount-s3 command for Ubuntu 22.04
 if ! command -v mount-s3 &> /dev/null
