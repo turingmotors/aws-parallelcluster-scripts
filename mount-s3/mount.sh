@@ -7,10 +7,10 @@ OPTIONS="${@:3}"
 # Install mount-s3 command for Ubuntu 22.04
 if ! command -v mount-s3 &> /dev/null
 then
-  apt-get update
-  apt-get install libfuse2 -y
+  apt-get -o DPkg::Lock::Timeout=300 update -y
+  apt-get -o DPkg::Lock::Timeout=300 install -y libfuse2
   wget -O /tmp/mount-s3.deb https://s3.amazonaws.com/mountpoint-s3-release/latest/x86_64/mount-s3.deb
-  apt-get -o DPkg::Lock::Timeout=300 install /tmp/mount-s3.deb -y
+  apt-get -o DPkg::Lock::Timeout=300 install -y /tmp/mount-s3.deb
 else
   echo "mount-s3 is already installed."
 fi
