@@ -10,7 +10,7 @@ then
   apt-get update
   apt-get install libfuse2 -y
   wget -O /tmp/mount-s3.deb https://s3.amazonaws.com/mountpoint-s3-release/latest/x86_64/mount-s3.deb
-  apt-get install /tmp/mount-s3.deb -y
+  apt-get -o DPkg::Lock::Timeout=300 install /tmp/mount-s3.deb -y
 else
   echo "mount-s3 is already installed."
 fi
