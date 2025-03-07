@@ -21,6 +21,12 @@ then
     echo "user_allow_other" | sudo tee -a /etc/fuse.conf
 fi
 
+# Create cache directory
+mkdir -p /scratch
+chmod 777 /scratch
+
+# Create mount target directory
 mkdir -p ${TARGET_DIRECTORY}
 chmod 777 ${TARGET_DIRECTORY}
+
 mount-s3 ${BUCKET_NAME} ${TARGET_DIRECTORY} ${OPTIONS}
