@@ -2,4 +2,4 @@
 
 set -exo pipefail
 
-ulimit -n 65536
+ulimit -n 262144
