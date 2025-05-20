@@ -29,4 +29,23 @@ chmod 777 /scratch
 mkdir -p ${TARGET_DIRECTORY}
 chmod 777 ${TARGET_DIRECTORY}
 
-mount-s3 ${BUCKET_NAME} ${TARGET_DIRECTORY} ${OPTIONS}
+sudo tee /etc/systemd/system/mount-s3.service << EOF
+[Unit]
+Description=Mount S3 Bucket via mount-s3
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/mount-s3 ${BUCKET_NAME} ${TARGET_DIRECTORY} ${OPTIONS}
+Restart=on-failure
+RestartSec=5s
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable mount-s3.service
+sudo systemctl start mount-s3.service
