@@ -16,7 +16,6 @@ OPTIONS=("$@")
 # 固定パラメータ
 WRAPPER_PATH="/usr/local/bin/mount-s3-wrapper.sh"
 SERVICE_PATH="/etc/systemd/system/mount-s3.service"
-LOG_DIR="/var/log/mountpoint"
 WATCHDOG_INTERVAL=10    # systemd WatchdogSec 秒
 
 # --- 2. mount-s3 本体のインストール ---
@@ -34,8 +33,8 @@ fi
 grep -q "^user_allow_other" /etc/fuse.conf || \
   echo "user_allow_other" | sudo tee -a /etc/fuse.conf
 
-mkdir -p "${TARGET_DIRECTORY}" /scratch "${LOG_DIR}"
-chmod 777 "${TARGET_DIRECTORY}" /scratch "${LOG_DIR}"
+mkdir -p "${TARGET_DIRECTORY}" /scratch
+chmod 777 "${TARGET_DIRECTORY}" /scratch
 
 # --- 4. wrapper スクリプト生成 ---
 cat << 'EOF' > "${WRAPPER_PATH}"
