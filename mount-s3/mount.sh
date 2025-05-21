@@ -52,11 +52,12 @@ export NOTIFY_SOCKET
 
 systemd-notify --ready --status="mount-s3 started (PID $CHILD)"
 
+# systemctl stopコマンドを伝播する
 trap 'kill -TERM $CHILD 2>/dev/null' TERM INT
 
 # health-check loop
 while kill -0 $CHILD 2>/dev/null; do
-  # 2) hungテスト
+  # ls して5秒間 返答がなければプロセス停止する
   if ! timeout 5s ls "${TARGET_DIRECTORY}" >/dev/null; then
     echo "[$(date)] I/O hang detected, killing child" | systemd-cat -t mount-s3
     kill $CHILD
