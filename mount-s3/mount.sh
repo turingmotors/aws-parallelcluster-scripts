@@ -16,7 +16,6 @@ OPTIONS=("$@")
 # 固定パラメータ
 WRAPPER_PATH="/usr/local/bin/mount-s3-wrapper.sh"
 SERVICE_PATH="/etc/systemd/system/mount-s3.service"
-WATCHDOG_INTERVAL=10    # systemd WatchdogSec 秒
 
 # --- 2. mount-s3 本体のインストール ---
 if ! command -v mount-s3 &>/dev/null; then
@@ -46,10 +45,11 @@ TARGET_DIRECTORY="$2"
 shift 2
 OPTIONS=("$@")
 
-exec /usr/bin/mount-s3 "${BUCKET_NAME}" "${TARGET_DIRECTORY}" "${OPTIONS[@]}" --foreground &
+/usr/bin/mount-s3 "${BUCKET_NAME}" "${TARGET_DIRECTORY}" "${OPTIONS[@]}" --foreground &
 CHILD=$!
 
 export NOTIFY_SOCKET
+
 systemd-notify --ready --status="mount-s3 started (PID $CHILD)"
 
 trap 'kill -TERM $CHILD 2>/dev/null' TERM INT
@@ -63,7 +63,6 @@ while kill -0 $CHILD 2>/dev/null; do
     break
   fi
 
-  systemd-notify WATCHDOG=1
   sleep 5
 done
 
@@ -82,7 +81,7 @@ done
 
 cat << EOF > "${SERVICE_PATH}"
 [Unit]
-Description=Mount S3 Bucket via mount-s3 (with watchdog)
+Description=Mount S3 Bucket via mount-s3-wrapper
 After=network-online.target
 Wants=network-online.target
 
@@ -91,10 +90,7 @@ Type=notify
 NotifyAccess=main
 ExecStart=${WRAPPER_PATH} ${BUCKET_NAME} ${TARGET_DIRECTORY}${OPTS_JOINED}
 
-WatchdogSec=${WATCHDOG_INTERVAL}s
 Restart=always
-StartLimitBurst=5
-ExecStop=/bin/true
 RestartSec=2s
 LimitNOFILE=65536
 
