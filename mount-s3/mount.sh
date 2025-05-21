@@ -22,7 +22,7 @@ WATCHDOG_INTERVAL=10    # systemd WatchdogSec 秒
 # --- 2. mount-s3 本体のインストール ---
 if ! command -v mount-s3 &>/dev/null; then
   apt-get -o DPkg::Lock::Timeout=300 update -y
-  apt-get -o DPkg::Lock::Timeout=300 install -y libfuse2
+  apt-get -o DPkg::Lock::Timeout=300 install -y libfuse2 dos2unix
   wget -O /tmp/mount-s3.deb \
     https://s3.amazonaws.com/mountpoint-s3-release/latest/x86_64/mount-s3.deb
   apt-get -o DPkg::Lock::Timeout=300 install -y /tmp/mount-s3.deb
@@ -42,43 +42,30 @@ cat << 'EOF' > "${WRAPPER_PATH}"
 #!/bin/bash
 set -eu
 
-BUCKET="$1"
-TARGET="$2"
+BUCKET_NAME="$1"
+TARGET_DIRECTORY="$2"
 shift 2
 OPTIONS=("$@")
 
-# 停止フラグ
-stop_requested=0
-trap 'stop_requested=1; kill "$child" 2>/dev/null' TERM INT
+# (1) mount-s3 をフォアグラウンド実行
+exec /usr/bin/mount-s3 "${BUCKET_NAME}" "${TARGET_DIRECTORY}" "${OPTIONS[@]}" --foreground &
+CHILD=$!
 
-# systemd-notify 用
+# (2) systemd に ready 通知
 export NOTIFY_SOCKET
+systemd-notify --ready --status="mount-s3 started (PID $CHILD)"
 
-# supervisor ループ
-while [ $stop_requested -eq 0 ]; do
-  # (1) mount-s3 起動
-  /usr/bin/mount-s3 "$BUCKET" "$TARGET" "${OPTIONS[@]}" --foreground &
-  child=$!
+# (3) systemd からのシグナルを子プロセスに転送
+trap 'kill -TERM $CHILD 2>/dev/null' TERM INT
 
-  # (2) 最初の ready 通知（一度だけ）
-  systemd-notify --ready --status="mount-s3 started (PID $child)"
-
-  # (3) child が死ぬまで待機 or stop 要求
-  while kill -0 "$child" 2>/dev/null; do
-    sleep 1
-  done
-
-  # (4) child exit
-  wait "$child" || true
-
-  # (5) stop 要求ならループ抜け
-  [ $stop_requested -eq 1 ] && break
-
-  # (6) まだサービス継続：ログだけ残して即再起動
-  echo "[$(date -Iseconds)] mount-s3 (PID $child) exited; restarting…" | systemd-cat -t mount-s3-supervisor
+# (4) 定期的に watchdog 通知
+while kill -0 "$CHILD" 2>/dev/null; do
+  systemd-notify WATCHDOG=1 --status="alive: ${CHILD}"
+  sleep 5
 done
 
-exit 0
+wait "$CHILD"
+exit $?
 EOF
 
 chmod +x "${WRAPPER_PATH}"
@@ -92,32 +79,24 @@ done
 
 cat << EOF > "${SERVICE_PATH}"
 [Unit]
-Description=Mount S3 Bucket via mount-s3 (supervised)
+Description=Mount S3 Bucket via mount-s3 (with watchdog)
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=notify
 NotifyAccess=main
+ExecStart=${WRAPPER_PATH} ${BUCKET_NAME} ${TARGET_DIRECTORY}${OPTS_JOINED}
 
-# supervisor をフォアグラウンド実行
-ExecStart=${WRAPPER_PATH} ${BUCKET_NAME} ${TARGET_DIRECTORY} ${OPTS_JOINED}
-
-# systemctl stop で wrapper に SIGTERM
-KillMode=control-group
-
-# 再起動させない（wrapper 内で再起動を制御）
-Restart=no
-
-# 必要なら Stop 時にアンマウント
-ExecStop=/usr/bin/fusermount -uz /s3/dataset
-TimeoutStopSec=20
-
+WatchdogSec=${WATCHDOG_INTERVAL}s
+Restart=always
+StartLimitBurst=5
+ExecStop=/bin/true
+RestartSec=2s
 LimitNOFILE=65536
 
 [Install]
 WantedBy=multi-user.target
-
 EOF
 
 # --- 6. systemd 再読み込み＆起動 ---
