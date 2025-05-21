@@ -55,11 +55,11 @@ systemd-notify --ready --status="mount-s3 started (PID $CHILD)"
 trap 'kill -TERM $CHILD 2>/dev/null' TERM INT
 
 # health-check loop
-while kill -0 $child 2>/dev/null; do
+while kill -0 $CHILD 2>/dev/null; do
   # 2) hungテスト
-  if ! timeout 5s ls "$TARGET" >/dev/null; then
+  if ! timeout 5s ls "${TARGET_DIRECTORY}" >/dev/null; then
     echo "[$(date)] I/O hang detected, killing child" | systemd-cat -t mount-s3
-    kill $child
+    kill $CHILD
     break
   fi
 
