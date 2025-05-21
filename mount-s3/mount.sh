@@ -46,20 +46,24 @@ TARGET_DIRECTORY="$2"
 shift 2
 OPTIONS=("$@")
 
-# (1) mount-s3 をフォアグラウンド実行
 exec /usr/bin/mount-s3 "${BUCKET_NAME}" "${TARGET_DIRECTORY}" "${OPTIONS[@]}" --foreground &
 CHILD=$!
 
-# (2) systemd に ready 通知
 export NOTIFY_SOCKET
 systemd-notify --ready --status="mount-s3 started (PID $CHILD)"
 
-# (3) systemd からのシグナルを子プロセスに転送
 trap 'kill -TERM $CHILD 2>/dev/null' TERM INT
 
-# (4) 定期的に watchdog 通知
-while kill -0 "$CHILD" 2>/dev/null; do
-  systemd-notify WATCHDOG=1 --status="alive: ${CHILD}"
+# health-check loop
+while kill -0 $child 2>/dev/null; do
+  # 2) hungテスト
+  if ! timeout 5s ls "$TARGET" >/dev/null; then
+    echo "[$(date)] I/O hang detected, killing child" | systemd-cat -t mount-s3
+    kill $child
+    break
+  fi
+
+  systemd-notify WATCHDOG=1
   sleep 5
 done
 
