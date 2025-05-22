@@ -95,7 +95,7 @@ Group=ubuntu
 ExecStart=${WRAPPER_PATH} ${BUCKET_NAME} ${TARGET_DIRECTORY} ${OPTS_JOINED}
 ExecStop=/usr/bin/fusermount -u ${TARGET_DIRECTORY}
 
-Restart=on-failure
+Restart=on-failure,on-watchdog
 WatchdogSec=10s
 RestartSec=2s
 LimitNOFILE=65536
