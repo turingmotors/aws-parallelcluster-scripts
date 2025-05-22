@@ -61,10 +61,11 @@ while kill -0 $CHILD 2>/dev/null; do
   if ! timeout 5s ls "${TARGET_DIRECTORY}" >/dev/null; then
     echo "[$(date)] I/O hang detected, killing child" | systemd-cat -t mount-s3
     kill $CHILD
-    break
+    exit 1
   fi
 
   sleep 5
+  systemd-notify WATCHDOG=1 --status="alive: ${CHILD}"
 done
 
 wait "$CHILD"
@@ -83,20 +84,24 @@ done
 cat << EOF > "${SERVICE_PATH}"
 [Unit]
 Description=Mount S3 Bucket via mount-s3-wrapper
-After=network-online.target
-Wants=network-online.target
+Wants=network.target
+AssertPathIsDirectory=${TARGET_DIRECTORY}
 
 [Service]
 Type=notify
 NotifyAccess=main
-ExecStart=${WRAPPER_PATH} ${BUCKET_NAME} ${TARGET_DIRECTORY}${OPTS_JOINED}
+User=ubuntu
+Group=ubuntu
+ExecStart=${WRAPPER_PATH} ${BUCKET_NAME} ${TARGET_DIRECTORY} ${OPTS_JOINED}
+ExecStop=/usr/bin/fusermount -u ${TARGET_DIRECTORY}
 
-Restart=always
+Restart=on-failure
+WatchdogSec=10s
 RestartSec=2s
 LimitNOFILE=65536
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=remote-fs.target
 EOF
 
 # --- 6. systemd 再読み込み＆起動 ---
