@@ -29,4 +29,4 @@ chmod 777 /scratch
 mkdir -p ${TARGET_DIRECTORY}
 chmod 777 ${TARGET_DIRECTORY}
 
-mount-s3 ${BUCKET_NAME} ${TARGET_DIRECTORY} ${OPTIONS}
+mount-s3 ${BUCKET_NAME} ${TARGET_DIRECTORY} ${OPTIONS} --metadata-ttl indefinite
