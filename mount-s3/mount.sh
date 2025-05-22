@@ -89,7 +89,7 @@ AssertPathIsDirectory=${TARGET_DIRECTORY}
 
 [Service]
 Type=notify
-NotifyAccess=main
+NotifyAccess=all
 User=ubuntu
 Group=ubuntu
 ExecStart=${WRAPPER_PATH} ${BUCKET_NAME} ${TARGET_DIRECTORY} ${OPTS_JOINED}
